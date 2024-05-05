@@ -1,0 +1,84 @@
+//solidity:
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract Todo{
+    struct Task{
+         string name;
+         string description;
+         uint deadline;
+         bool status;
+    }
+     mapping(uint => Task) tasks;
+     uint id = 1;
+     function create(string memory _name, string memory _description, uint _deadline) public {
+        tasks[id] = Task(_name, _description, _deadline, false);
+        id++;
+    }
+    function read(uint _id) public view returns(Task memory){
+        return tasks[_id];
+    }
+    function update(uint _id) public {
+        tasks[_id].status = !tasks[_id].status;
+    }   
+    function delete_task(uint _id) public {
+        delete tasks[_id];
+    }
+}
+
+
+
+
+//js:
+
+
+const {
+  time,
+  loadFixture,
+} = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
+const { expect } = require("chai");
+const { ethers } = require("hardhat");
+
+describe("Todo", function () {
+
+    async function deplyTodo(){
+      const Todo = await ethers.getContractFactory("Todo");
+      const todo = await Todo.deploy();
+      return todo;
+    }
+    describe("Todo Contract functionality", function () {
+      it("Create Functionality", async function (){
+        const todo = await loadFixture(deplyTodo);
+        await todo.create("task1", "description1", 1714895636);
+        let task = await todo.read(1);
+
+        expect(task.name).to.equal("task1")
+        expect(task.description).to.equal("description1")
+        expect(task.deadline).to.equal(1714895636)
+        expect(task.status).to.equal(false)
+      })
+
+      it("Update Functionality", async function (){
+        const todo = await loadFixture(deplyTodo);
+        await todo.create("task1", "description1", 1714895636);
+        await todo.update(1)
+        let task = await todo.read(1);
+
+        expect(task.name).to.equal("task1")
+        expect(task.description).to.equal("description1")
+        expect(task.deadline).to.equal(1714895636)
+        expect(task.status).to.equal(true)
+      })
+
+      it("Delete Functionality", async function (){
+        const todo = await loadFixture(deplyTodo);
+        await todo.create("task1", "description1", 1714895636);
+        await todo.delete_task(1)
+        let task = await todo.read(1);
+
+        expect(task.name).to.equal("")
+      })
+
+    });
+})
